@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AOA Illustration IA-2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(to right, #e0f7fa, #f0f9ff);
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    input {
+      padding: 8px;
+      font-size: 16px;
+      width: 300px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #number-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 300px;
+      margin-top: 30px;
+      gap: 10px;
+    }
+
+    .number-box {
+      width: 30px;
+      background-color: #38bdf8;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      border-radius: 5px 5px 0 0;
+      transition: all 0.3s ease;
+    }
+
+    .number-box.active {
+      background-color: orange;
+    }
+
+    .number-box.sorted {
+      background-color: green;
+    }
+
+    #analysis {
+      margin-top: 30px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      background: linear-gradient(145deg, #f1f5f9, #ffffff);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      font-size: 16px;
+      text-align: left;
+    }
+
+    #analysis h3 {
+      margin-bottom: 15px;
+      color: #1f2937;
+      font-size: 20px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+    }
+
+    .metric {
+      margin: 6px 0;
+      font-weight: 500;
+    }
+
+    .label {
+      color: #0f172a;
+    }
+
+    .best {
+      color: #16a34a;
+    }
+
+    .average {
+      color: #f97316;
+    }
+
+    .worst {
+      color: #dc2626;
+    }
+
+    .neutral {
+      color: #3b82f6;
+      font-weight: bold;
+    }
+
+    .counter {
+      color: #1d4ed8;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Selection Sort Simulation</h1>
+  <input type="text" id="numberInput" placeholder="Enter numbers separated by commas" />
+  <br>
+  <button onclick="parseInput()">Visualize</button>
+  <button onclick="selectionSort()">Sort</button>
+  <button onclick="resetAll()">Reset</button>
+
+  <div id="number-container"></div>
+
+  <div id="analysis">
+    <h3>Selection Sort Analysis</h3>
+    <div class="metric label">Time Complexity:</div>
+    <div class="metric best">• Best Case: O(n²)</div>
+    <div class="metric average">• Average Case: O(n²)</div>
+    <div class="metric worst">• Worst Case: O(n²)</div>
+    <div class="metric label">Space Complexity: <span class="neutral">O(1)</span></div>
+    <div class="metric label">Comparisons: <span id="comparisonCount" class="counter">0</span></div>
+    <div class="metric label">Swaps: <span id="swapCount" class="counter">0</span></div>
+  </div>
+
+  <script>
+    let arr = [];
+    let comparisons = 0;
+    let swaps = 0;
+
+    const container = document.getElementById("number-container");
+    const comparisonCountEl = document.getElementById("comparisonCount");
+    const swapCountEl = document.getElementById("swapCount");
+
+    function parseInput() {
+      const input = document.getElementById("numberInput").value.trim();
+      if (!input) {
+        alert("Please enter some numbers.");
+        return;
+      }
+
+      const nums = input.split(",").map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));
+      if (nums.length === 0) {
+        alert("Invalid input. Please enter valid numbers separated by commas.");
+        return;
+      }
+
+      arr = nums;
+      comparisons = 0;
+      swaps = 0;
+      updateMetrics();
+      renderBars();
+    }
+
+    function renderBars() {
+      container.innerHTML = "";
+      const maxVal = Math.max(...arr);
+      arr.forEach(num => {
+        const div = document.createElement("div");
+        div.className = "number-box";
+        div.style.height = `${(num / maxVal) * 100}%`;
+        div.innerText = num;
+        container.appendChild(div);
+      });
+    }
+
+    function updateMetrics() {
+      comparisonCountEl.textContent = comparisons;
+      swapCountEl.textContent = swaps;
+    }
+
+    async function selectionSort() {
+      const boxes = document.getElementsByClassName("number-box");
+
+      for (let i = 0; i < arr.length - 1; i++) {
+        let minIndex = i;
+        boxes[i].classList.add("active");
+
+        for (let j = i + 1; j < arr.length; j++) {
+          boxes[j].classList.add("active");
+          await sleep(300);
+
+          comparisons++;
+          updateMetrics();
+
+          if (arr[j] < arr[minIndex]) {
+            minIndex = j;
+          }
+
+          boxes[j].classList.remove("active");
+        }
+
+        if (minIndex !== i) {
+          [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];
+          updateBarHeight(boxes[i], arr[i]);
+          updateBarHeight(boxes[minIndex], arr[minIndex]);
+          swaps++;
+          updateMetrics();
+        }
+
+        boxes[i].classList.remove("active");
+        boxes[i].classList.add("sorted");
+      }
+
+      boxes[arr.length - 1].classList.add("sorted");
+    }
+
+    function updateBarHeight(bar, value) {
+      const maxVal = Math.max(...arr);
+      bar.style.height = `${(value / maxVal) * 100}%`;
+      bar.innerText = value;
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function resetAll() {
+      document.getElementById("numberInput").value = "";
+      container.innerHTML = "";
+      arr = [];
+      comparisons = 0;
+      swaps = 0;
+      updateMetrics();
+    }
+  </script>
+</body>
+</html>
